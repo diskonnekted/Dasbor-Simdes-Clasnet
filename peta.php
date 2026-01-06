@@ -48,10 +48,10 @@ if ($res = $db->query("SELECT id, nama_kecamatan, nama_desa, alamat_website, jum
     if ($desaNorm !== '') { $desaData[$key] = $r; }
   }
 }
-if (isset($_GET['related'])) {
+if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
   header('Content-Type: application/json');
   $desaQ = trim($_GET['desa'] ?? '');
-  $kecQ = trim($_GET['kec'] ?? '');
+  $kecQ = trim($_GET['kecamatan'] ?? $_GET['kec'] ?? '');
   if ($desaQ === '') { echo json_encode(['items'=>[]]); exit; }
   
   // Cari ID Desa berdasarkan nama (dan kecamatan jika ada)
@@ -403,8 +403,8 @@ if (isset($_GET['related'])) {
       if (feature) {
         const props = feature.getProperties();
         const name = props['Nama_Desa_'] || props['nama'] || props['Name'] || 'Desa';
-        const kec = props['Nama_Kec'] || props['kecamatan'] || '';
-        const kab = props['Nama_Kab'] || props['kabupaten'] || '';
+        const kec = props['Nama_Kec'] || props['Kecamatan'] || props['kecamatan'] || '';
+        const kab = props['Nama_Kab'] || props['Kabupaten'] || props['kabupaten'] || '';
         
         const normDesa = (name||'').toLowerCase().trim().replace(/^desa\s+/,'').replace(/\s+/g,' ');
         const normKecVal = (kec||'').toLowerCase().trim().replace(/\s+/g,' ');
