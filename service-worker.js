@@ -1,5 +1,5 @@
 const CACHE_NAME = 'sid-pwa-v1';
-const URLS_TO_CACHE = ['/', '/index.php', '/mobile.php', '/mobile_desa.php', '/mobile_kegiatan.php', '/mobile_inovasi.php', '/mobile_kontak.php', '/clasnet.png', '/footer.png'];
+const URLS_TO_CACHE = ['/', '/index.php', '/mobile.php', '/mobile_desa.php', '/mobile_kegiatan.php', '/mobile_inovasi.php', '/mobile_kontak.php', '/mobile_peta.php', '/mobile_statistik.php', '/clasnet.png', '/footer.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(URLS_TO_CACHE)).then(() => self.skipWaiting()));
 });

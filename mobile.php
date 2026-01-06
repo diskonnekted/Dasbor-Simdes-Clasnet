@@ -80,27 +80,27 @@ $inactivePct= $total > 0 ? round(($withoutWebsite / $total) * 100) : 0;
       <div class="bg-white rounded-xl shadow p-4 mb-4">
         <div class="text-sm font-medium">Akses Cepat</div>
         <div class="grid grid-cols-3 gap-3 mt-3">
-          <a href="desa.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-50 text-blue-700">
+          <a href="mobile_desa.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-50 text-blue-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 9-1.5 1.5L18 12.5V20h-5v-4H11v4H6v-7.5L4.5 13.5 3 12l9-9z"/></svg>
             <span class="text-xs mt-1">Desa</span>
           </a>
-          <a href="peta.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-emerald-50 text-emerald-700">
+          <a href="mobile_peta.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-emerald-50 text-emerald-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
             <span class="text-xs mt-1">Peta</span>
           </a>
-          <a href="statistik2.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-indigo-50 text-indigo-700">
+          <a href="mobile_statistik.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-indigo-50 text-indigo-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
             <span class="text-xs mt-1">Statistik</span>
           </a>
-          <a href="kegiatan.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-yellow-50 text-yellow-700">
+          <a href="mobile_kegiatan.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-yellow-50 text-yellow-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
             <span class="text-xs mt-1">Kegiatan</span>
           </a>
-          <a href="inovasi.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-rose-50 text-rose-700">
+          <a href="mobile_inovasi.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-rose-50 text-rose-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M9 21h6v-1c0-1.66 1.34-3 3-3v-4c0-3.31-2.69-6-6-6S6 9.69 6 13v4c1.66 0 3 1.34 3 3v1z"/></svg>
             <span class="text-xs mt-1">Inovasi</span>
           </a>
-          <a href="kontak.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-50 text-gray-700">
+          <a href="mobile_kontak.php" class="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-50 text-gray-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v16l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
             <span class="text-xs mt-1">Kontak</span>
           </a>
