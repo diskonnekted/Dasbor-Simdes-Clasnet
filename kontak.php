@@ -29,7 +29,7 @@ error_reporting(E_ALL);
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white shadow-lg p-6 mb-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-semibold">Kontak Tim Pengembang SID</h1>
+          <h1 class="text-2xl font-semibold">Kontak Tim Pendamping Digitalisasi Desa</h1>
           <p class="text-sm mt-1 opacity-90">Clasnet Group — Layanan Sistem Informasi Desa.</p>
           <p class="text-xs mt-2 opacity-80">Alamat: Jl. Serulingmas No. 30, Banjarnegara</p>
         </div>
