@@ -47,7 +47,7 @@ error_reporting(E_ALL);
           <div class="text-gray-700">Banjarnegara</div>
         </div>
         <div class="col-span-1">
-          <div class="text-sm text-gray-600">Pengembang</div>
+          <div class="text-sm text-gray-600">Pendamping Digitalisasi Desa</div>
           <div class="mt-1 text-lg font-semibold">Clasnet Group</div>
           <div class="text-gray-700">Sistem Informasi Desa (SID)</div>
         </div>
