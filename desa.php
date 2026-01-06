@@ -179,7 +179,17 @@ if ($stmt) {
           <tr class="border-t odd:bg-gray-50 hover:bg-blue-50/30">
             <td class="px-4 py-2 text-gray-500"><?= $i++ ?></td>
             <td class="px-4 py-2 font-medium text-gray-900"><?= htmlspecialchars($r['nama_kecamatan']) ?></td>
-            <td class="px-4 py-2 text-gray-800"><?= htmlspecialchars($r['nama_desa']) ?></td>
+            <td class="px-4 py-2 text-gray-800">
+              <button onclick="openModal(this)"
+                data-desa="<?= htmlspecialchars($r['nama_desa']) ?>"
+                data-kec="<?= htmlspecialchars($r['nama_kecamatan']) ?>"
+                data-website="<?= htmlspecialchars($r['alamat_website']) ?>"
+                data-penduduk="<?= htmlspecialchars($jpFmt) ?>"
+                data-db="<?= htmlspecialchars($dbpUpper) ?>"
+                class="text-blue-600 hover:text-blue-800 hover:underline font-medium text-left">
+                <?= htmlspecialchars($r['nama_desa']) ?>
+              </button>
+            </td>
             <td class="px-4 py-2 whitespace-nowrap"><?= $link ?></td>
             <td class="px-4 py-2 text-gray-600"><?= htmlspecialchars($r['last_checked_at'] ?? '') ?></td>
             <td class="px-4 py-2 font-semibold text-gray-900"><?= htmlspecialchars($jpFmt) ?></td>
@@ -218,5 +228,96 @@ if ($stmt) {
     </div>
   </div>
   <?php include __DIR__ . '/partials/footer.php'; ?>
+
+<!-- Modal -->
+<div id="desaModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/60 transition-opacity backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-gray-100">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white" id="modalTitle">Nama Desa</h3>
+                    <button type="button" onclick="closeModal()" class="text-white/80 hover:text-white transition-colors">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="px-6 py-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Kecamatan</div>
+                            <div class="font-medium text-gray-900" id="modalKec"></div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Jumlah Penduduk</div>
+                            <div class="font-medium text-gray-900" id="modalPenduduk"></div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Status DB</div>
+                            <div class="font-medium" id="modalDb"></div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Website</div>
+                            <div class="truncate" id="modalWeb"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
+                            Berita Terkait
+                        </h4>
+                        <div id="modalNews" class="space-y-3 min-h-[100px]"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse">
+                    <button type="button" onclick="closeModal()" class="inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function openModal(btn) {
+    const desa = btn.dataset.desa;
+    const kec = btn.dataset.kec;
+    const web = btn.dataset.website;
+    const pend = btn.dataset.penduduk;
+    const db = btn.dataset.db;
+    document.getElementById('modalTitle').textContent = desa;
+    document.getElementById('modalKec').textContent = kec;
+    document.getElementById('modalPenduduk').textContent = pend || '-';
+    const dbEl = document.getElementById('modalDb');
+    if(db === 'SUDAH ADA') dbEl.innerHTML = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Sudah Ada</span>';
+    else if(db === 'BELUM ADA') dbEl.innerHTML = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">Belum Ada</span>';
+    else dbEl.innerHTML = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Tidak Diketahui</span>';
+    const webEl = document.getElementById('modalWeb');
+    if(web && web.startsWith('http')) webEl.innerHTML = `<a href="${web}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">${web} <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>`;
+    else webEl.textContent = web || '-';
+    const modal = document.getElementById('desaModal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    const newsContainer = document.getElementById('modalNews');
+    newsContainer.innerHTML = `<div class="flex flex-col items-center justify-center py-8 text-gray-500"><svg class="animate-spin h-8 w-8 text-blue-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm">Memuat berita...</span></div>`;
+    fetch(`peta.php?related=1&desa=${encodeURIComponent(desa)}&kec=${encodeURIComponent(kec)}&_t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.items && data.items.length > 0) {
+                let html = '';
+                data.items.forEach(item => {
+                    const img = item.gambar ? `<img src="${item.gambar}" class="w-20 h-20 object-cover rounded-lg flex-shrink-0 bg-gray-200">` : `<div class="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-400"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2v12a2 2 0 002 2z"></path></svg></div>`;
+                    html += `<div class="flex gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100">${img}<div class="flex-1 min-w-0"><h5 class="text-sm font-bold text-gray-900 line-clamp-2 leading-snug mb-1">${item.judul}</h5><p class="text-xs text-gray-500 line-clamp-2 mb-2">${item.isi.replace(/<[^>]*>/g, '').substring(0, 100)}...</p><div class="text-[10px] text-gray-400 flex items-center gap-2"><span>${new Date(item.dibuat_pada).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}</span><span>•</span><span>${item.author || 'Admin'}</span></div></div></div>`;
+                });
+                newsContainer.innerHTML = html;
+            } else {
+                newsContainer.innerHTML = `<div class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200"><svg class="mx-auto h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg><p class="mt-2 text-sm text-gray-500">Belum ada berita terkait desa ini.</p></div>`;
+            }
+        })
+        .catch(err => { console.error(err); newsContainer.innerHTML = `<div class="text-center py-4 text-red-500 text-sm">Gagal memuat berita.</div>`; });
+}
+function closeModal() {
+    document.getElementById('desaModal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(event) { if (event.key === "Escape") closeModal(); });
+</script>
 </body>
 </html>
