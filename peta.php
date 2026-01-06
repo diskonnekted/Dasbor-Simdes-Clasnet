@@ -1,6 +1,9 @@
 <?php
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
 require_once __DIR__ . '/config.php';
 $db = db();
 $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -216,6 +219,13 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
   </div>
   <?php include __DIR__ . '/partials/footer.php'; ?>
   <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').then(reg => {
+        reg.update();
+      });
+    }
+  </script>
   <script>
     const vectorSource = new ol.source.Vector({
       format: new ol.format.GeoJSON({ dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' }),
