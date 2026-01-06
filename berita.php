@@ -6,6 +6,13 @@ require_once __DIR__ . '/config.php';
 $db = db();
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+if (!isset($_COOKIE['force_desktop'])) {
+  if (preg_match('/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua)) {
+    header('Location: mobile_berita.php?id=' . $id);
+    exit;
+  }
+}
 $post = null;
 $gallery = [];
 if ($id > 0) {

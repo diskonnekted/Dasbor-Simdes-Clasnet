@@ -3,29 +3,25 @@ ini_set('display_errors', '1');
 error_reporting(E_ALL);
 require_once __DIR__ . '/config.php';
 $db = db();
-$db->query("CREATE TABLE IF NOT EXISTS berita (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  judul VARCHAR(255) NOT NULL,
-  isi TEXT NOT NULL,
-  gambar VARCHAR(255) DEFAULT NULL,
-  dibuat_pada DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  published TINYINT(1) NOT NULL DEFAULT 1,
-  author VARCHAR(100) DEFAULT 'Clasnet Group'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-$perPage = 10;
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$totalItems = 0;
-if ($cnt = $db->query("SELECT COUNT(*) AS c FROM berita WHERE published=1")) { $r = $cnt->fetch_assoc(); $totalItems = (int)$r['c']; }
-$totalPages = $perPage > 0 ? max(1, (int)ceil($totalItems / $perPage)) : 1;
-if ($page > $totalPages) { $page = $totalPages; }
-$offset = ($page - 1) * $perPage;
-$berita = [];
-$sql = sprintf("SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 ORDER BY dibuat_pada DESC LIMIT %d OFFSET %d", $perPage, $offset);
-if ($res = $db->query($sql)) { while ($r = $res->fetch_assoc()) { $berita[] = $r; } }
-function excerpt($text, $len = 120) {
-  $plain = strip_tags($text);
-  if (mb_strlen($plain) <= $len) return $plain;
-  return mb_substr($plain, 0, $len) . '…';
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$post = null; $gallery = [];
+if ($id > 0) {
+  if ($res = $db->prepare("SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 AND id=?")) {
+    $res->bind_param('i', $id);
+    $res->execute();
+    $result = $res->get_result();
+    $post = $result->fetch_assoc();
+    $res->close();
+  }
+  if ($post) {
+    if ($stmtG = $db->prepare('SELECT id, path FROM berita_foto WHERE berita_id=? ORDER BY urutan ASC, id ASC')) {
+      $stmtG->bind_param('i', $id);
+      $stmtG->execute();
+      $resG = $stmtG->get_result();
+      while ($row = $resG->fetch_assoc()) { $gallery[] = $row; }
+      $stmtG->close();
+    }
+  }
 }
 ?>
 <!doctype html>
@@ -33,7 +29,7 @@ function excerpt($text, $len = 120) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-  <title>Kegiatan — SID Mobile</title>
+  <title><?= $post ? htmlspecialchars($post['judul']) : 'Berita Tidak Ditemukan' ?> — SID Mobile</title>
   <link rel="icon" href="clasnet.png" type="image/png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
@@ -41,48 +37,53 @@ function excerpt($text, $len = 120) {
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>.content img{max-width:100%;height:auto}</style>
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen pb-16">
   <header class="fixed top-0 left-0 right-0 bg-blue-600 text-white z-20">
     <div class="px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <img src="clasnet.png" alt="Logo" class="w-8 h-8 rounded object-contain">
-        <div class="font-semibold">Kegiatan</div>
+        <a href="mobile_kegiatan.php" class="inline-flex items-center justify-center w-9 h-9 rounded bg-white/20" aria-label="Kembali">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </a>
+        <div class="font-semibold">Detail Kegiatan</div>
       </div>
       <a href="kegiatan.php" class="text-white/90">Web</a>
     </div>
   </header>
   <main class="pt-16">
     <div class="px-4">
-      <?php if (empty($berita)): ?>
+      <?php if (!$post): ?>
         <div class="bg-white rounded-xl shadow p-4">
-          <div class="text-center text-sm text-gray-700">Belum ada berita kegiatan.</div>
+          <div class="text-center text-sm">Berita tidak ditemukan</div>
+          <div class="mt-3 text-center">
+            <a href="mobile_kegiatan.php" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm">Kembali</a>
+          </div>
         </div>
       <?php else: ?>
-        <div class="space-y-3">
-          <?php foreach ($berita as $b): ?>
-          <a href="mobile_berita.php?id=<?= (int)$b['id'] ?>" class="block">
-            <article class="bg-white rounded-xl shadow overflow-hidden">
-              <?php $imgRel = !empty($b['gambar']) ? $b['gambar'] : null; $imgOk = $imgRel && file_exists(__DIR__ . '/' . $imgRel); ?>
-              <?php if ($imgOk): ?>
-                <img src="<?= htmlspecialchars($imgRel) ?>" alt="<?= htmlspecialchars($b['judul']) ?>" class="w-full h-36 object-cover">
-              <?php endif; ?>
-              <div class="p-3">
-                <div class="text-[11px] text-gray-500"><?= date('d M Y', strtotime($b['dibuat_pada'])) ?> • <?= htmlspecialchars($b['author'] ?: 'Clasnet Group') ?></div>
-                <div class="text-base font-semibold mt-1"><?= htmlspecialchars($b['judul']) ?></div>
-                <p class="text-sm text-gray-700 mt-1"><?= htmlspecialchars(excerpt($b['isi'])) ?></p>
-              </div>
-            </article>
-          </a>
-          <?php endforeach; ?>
-        </div>
-        <?php if ($totalPages > 1): ?>
-          <div class="mt-3 flex items-center justify-between">
-            <?php $prev = max(1, $page - 1); $next = min($totalPages, $page + 1); ?>
-            <a href="?page=<?= $prev ?>" class="px-3 py-2 rounded-lg border bg-white text-sm <?= $page===1?'pointer-events-none opacity-50':'' ?>">Prev</a>
-            <a href="?page=<?= $next ?>" class="px-3 py-2 rounded-lg border bg-white text-sm <?= $page===$totalPages?'pointer-events-none opacity-50':'' ?>">Next</a>
+        <article class="bg-white rounded-xl shadow overflow-hidden">
+          <?php if (!empty($post['gambar'])): ?>
+            <img src="<?= htmlspecialchars($post['gambar']) ?>" alt="<?= htmlspecialchars($post['judul']) ?>" class="w-full h-44 object-cover">
+          <?php endif; ?>
+          <div class="p-3">
+            <div class="text-[11px] text-gray-500 flex items-center justify-between">
+              <span><?= date('d M Y', strtotime($post['dibuat_pada'])) ?></span>
+              <span class="font-medium"><?= htmlspecialchars($post['author'] ?: 'Clasnet Group') ?></span>
+            </div>
+            <h1 class="text-base font-semibold mt-1 text-gray-900"><?= htmlspecialchars($post['judul']) ?></h1>
+            <div class="content prose prose-sm max-w-none mt-2 text-gray-800"><?= $post['isi'] ?></div>
           </div>
-        <?php endif; ?>
+          <?php if (!empty($gallery)): ?>
+          <div class="px-3 pb-3">
+            <div class="text-xs text-gray-600 mb-2">Foto Pendukung</div>
+            <div class="grid grid-cols-3 gap-2">
+              <?php foreach ($gallery as $g): ?>
+                <img src="<?= htmlspecialchars($g['path']) ?>" alt="Foto pendukung" class="w-full h-20 object-cover rounded">
+              <?php endforeach; ?>
+            </div>
+          </div>
+          <?php endif; ?>
+        </article>
       <?php endif; ?>
     </div>
   </main>

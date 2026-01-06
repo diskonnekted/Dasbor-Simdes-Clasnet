@@ -10,7 +10,9 @@ if (isset($_GET['view']) && $_GET['view'] === 'desktop') {
   setcookie('force_desktop', '1', time() + 60*60*24*30, '/');
 }
 if (!isset($_COOKIE['force_desktop'])) {
-  if (preg_match('/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua)) {
+  $isMobile = preg_match('/Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i', $ua);
+  $isTablet = preg_match('/iPad|Tablet/i', $ua);
+  if ($isMobile && !$isTablet) {
     header('Location: mobile.php');
     exit;
   }
@@ -83,6 +85,7 @@ $dbPendudukTotal = $dbPendudukSudah + $dbPendudukBelum;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Clasnet CMS <?= htmlspecialchars(APP_VERSION) ?>">
   <title>Statistik SID</title>
   <link rel="icon" href="clasnet.png" type="image/png">
   <link rel="manifest" href="/manifest.json">

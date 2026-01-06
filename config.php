@@ -8,6 +8,9 @@ define('DB_NAME', 'sid');
 // Kredensial Simple Auth Admin
 $ADMIN_USER = 'clasnet';
 $ADMIN_PASSWORD = 'Dikantor@5474';
+define('APP_VERSION', '1.1.0');
+header('X-CMS: Clasnet CMS');
+header('X-Powered-By: Clasnet CMS');
 
 function db() {
   $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);

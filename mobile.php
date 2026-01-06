@@ -34,6 +34,7 @@ function excerpt_mobile($text, $len = 90) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="generator" content="Clasnet CMS <?= htmlspecialchars(APP_VERSION) ?>">
   <title>Dasbor SID Mobile</title>
   <link rel="icon" href="clasnet.png" type="image/png">
   <link rel="manifest" href="/manifest.json">
@@ -51,7 +52,7 @@ function excerpt_mobile($text, $len = 90) {
         <div class="font-semibold">Dasbor SID</div>
       </div>
       <div class="flex items-center gap-3">
-        <a href="index.php" class="text-white/90">Web</a>
+        <a href="index.php?view=desktop" class="text-white/90">Web</a>
       </div>
     </div>
   </header>
@@ -124,7 +125,7 @@ function excerpt_mobile($text, $len = 90) {
         </div>
         <div class="mt-3 space-y-3">
           <?php foreach ($latestNews as $b): ?>
-          <a href="berita.php?id=<?= (int)$b['id'] ?>" class="block">
+          <a href="mobile_berita.php?id=<?= (int)$b['id'] ?>" class="block">
             <article class="flex gap-3">
               <?php $imgRel = !empty($b['gambar']) ? $b['gambar'] : null; $imgOk = $imgRel && file_exists(__DIR__ . '/' . $imgRel); ?>
               <?php if ($imgOk): ?>

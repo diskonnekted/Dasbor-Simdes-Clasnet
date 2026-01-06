@@ -11,6 +11,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen pb-16">
   <header class="fixed top-0 left-0 right-0 bg-blue-600 text-white z-20">
@@ -27,20 +28,16 @@
       <div class="bg-white rounded-xl shadow overflow-hidden">
         <div class="flex items-center justify-between px-4 py-3 border-b">
           <div>
-            <div class="text-sm text-gray-600">Peta Administrasi OpenSID</div>
-            <div class="text-xs text-gray-400">Sumber: arifsusilo.com/peta-administrasi-opensid</div>
+            <div class="text-xs text-gray-400">Data: GeoJSON dari repo Clasnet</div>
           </div>
-          <a href="https://www.arifsusilo.com/peta-administrasi-opensid/" target="_blank" class="inline-flex items-center gap-2 px-3 py-1 rounded-lg border bg-white text-sm">
-            Buka tab baru
+          <a href="https://github.com/Clasnet/clasnet-peta-desa" target="_blank" class="inline-flex items-center gap-2 px-3 py-1 rounded-lg border bg-white text-sm">
+            Repo Peta
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h7v7h-2V6.41l-6.29 6.3-1.42-1.42L17.59 5H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5V5z"/></svg>
           </a>
         </div>
         <div class="p-3">
           <div class="relative w-full h-[60vh] rounded-lg overflow-hidden ring-1 ring-gray-100">
-            <iframe src="https://www.arifsusilo.com/peta-administrasi-opensid/" title="Peta Administrasi OpenSID" class="absolute inset-0 w-full h-full" loading="lazy"></iframe>
-          </div>
-          <div class="text-xs text-gray-600 mt-3">
-            Jika peta tidak tampil, situs sumber mungkin membatasi iframe. Gunakan tombol “Buka tab baru”.
+            <div id="mapm" class="absolute inset-0 w-full h-full"></div>
           </div>
         </div>
       </div>
@@ -70,6 +67,68 @@
       </a>
     </div>
   </nav>
+  <script>
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  <script>
+    const vsrc = new ol.source.Vector({
+      format: new ol.format.GeoJSON({ dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' }),
+      url: '/peta_desa.geojson'
+    });
+    const vlyr = new ol.layer.Vector({
+      declutter: true,
+      source: vsrc,
+      style: function(feature) {
+        const name = feature.get('Nama_Desa_') || feature.get('nama') || feature.get('Name') || '';
+        const kec = feature.get('Nama_Kec') || feature.get('kecamatan') || '';
+        const normDesa = (name||'').toLowerCase().trim().replace(/^desa\s+/,'').replace(/\s+/g,' ');
+        const normKec = (kec||'').toLowerCase().trim().replace(/\s+/g,' ');
+        const key = normKec + '|' + normDesa;
+        let hasWebsite = false;
+        const dataMap = window.desaData || {};
+        if (dataMap[key]) {
+          const url = (dataMap[key].alamat_website || '').trim();
+          hasWebsite = url !== '';
+        } else {
+          const keys = Object.keys(dataMap);
+          for (let i=0;i<keys.length;i++) {
+            const k = keys[i];
+            if (k.endsWith('|'+normDesa)) {
+              const url = (dataMap[k].alamat_website || '').trim();
+              hasWebsite = url !== '';
+              break;
+            }
+          }
+        }
+        const fillColor = hasWebsite ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+        const strokeColor = hasWebsite ? '#10b981' : '#ef4444';
+        return new ol.style.Style({
+          fill: new ol.style.Fill({ color: fillColor }),
+          stroke: new ol.style.Stroke({ color: strokeColor, width: 1 }),
+          text: name ? new ol.style.Text({
+            text: name,
+            font: '10px sans-serif',
+            fill: new ol.style.Fill({ color: '#111827' }),
+            stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+          }) : null
+        });
+      }
+    });
+    const mmap = new ol.Map({
+      target: 'mapm',
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        vlyr
+      ],
+      view: new ol.View({ center: ol.proj.fromLonLat([110, -7.4]), zoom: 10 })
+    });
+    vsrc.once('change', function() {
+      if (vsrc.getState() === 'ready') {
+        const extent = vsrc.getExtent();
+        if (extent) mmap.getView().fit(extent, { padding: [20,20,20,20], duration: 500 });
+      }
+    });
+  </script>
   <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
