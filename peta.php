@@ -16,7 +16,7 @@ if ($nRes = $db->query("SELECT judul, isi FROM berita WHERE published=1")) {
 }
 $newsContent = mb_strtolower($newsContent);
 
-if ($res = $db->query("SELECT id, nama_kecamatan, nama_desa, alamat_website, jumlah_penduduk, db_penduduk FROM desa")) {
+if ($res = $db->query("SELECT id, nama_kecamatan, nama_desa, alamat_website, jumlah_penduduk, db_penduduk, developer FROM desa")) {
   while ($r = $res->fetch_assoc()) {
     $desaRaw = trim($r['nama_desa'] ?? '');
     $kecRaw = trim($r['nama_kecamatan'] ?? '');
@@ -282,6 +282,7 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
         const key = normKec + '|' + normDesa;
         let hasWebsite = false;
         let starCount = 0;
+        let isClasnet = false;
         const dataMap = window.desaData || {};
         let data = dataMap[key];
         
@@ -300,10 +301,28 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
             const url = (data.alamat_website || '').trim();
             hasWebsite = url !== '';
             starCount = parseInt(data.stars || 0, 10);
+            if (data.developer && data.developer.toLowerCase().includes('clasnet')) {
+                isClasnet = true;
+            }
         }
 
-        const fillColor = hasWebsite ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
-        const strokeColor = hasWebsite ? '#10b981' : '#ef4444';
+        // Logic Warna:
+        // 1. Jika Developer Clasnet -> Biru Muda (Langit)
+        // 2. Jika punya website (selain Clasnet) -> Hijau
+        // 3. Jika tidak punya website -> Merah
+        
+        let fillColor, strokeColor;
+        
+        if (isClasnet) {
+            fillColor = 'rgba(56, 189, 248, 0.4)'; // Sky Blue with higher opacity
+            strokeColor = '#0284c7'; // Sky 600
+        } else if (hasWebsite) {
+            fillColor = 'rgba(16, 185, 129, 0.15)'; // Green
+            strokeColor = '#10b981';
+        } else {
+            fillColor = 'rgba(244, 63, 94, 0.15)'; // Red
+            strokeColor = '#ef4444';
+        }
         
         let labelText = name;
         if (starCount > 0) labelText += ' ' + '★'.repeat(starCount);
@@ -381,6 +400,7 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
       const linkDesa = 'desa.php?q=' + encodeURIComponent(data.nama_desa || name);
       const stars = parseInt(data.stars||0, 10);
       const starStr = stars > 0 ? ' <span class="text-amber-500 text-sm">'+'★'.repeat(stars)+'</span>' : '';
+      const dev = data.developer ? data.developer : '-';
       panel.innerHTML =
         '<div class="space-y-3">'+
           '<div class="flex items-start gap-3">'+
@@ -401,6 +421,10 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
             '<div class="mt-3 flex items-center justify-between">'+
               '<div class="text-sm text-gray-600">Website</div>'+
               '<div>'+urlHtml+'</div>'+
+            '</div>'+
+            '<div class="mt-3 flex items-center justify-between border-t pt-2">'+
+              '<div class="text-sm text-gray-600">Developer</div>'+
+              '<div class="text-sm font-medium text-gray-800">'+esc(dev)+'</div>'+
             '</div>'+
           '</div>';
       const rp = document.getElementById('relatedPanel');
