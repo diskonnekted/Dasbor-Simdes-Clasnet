@@ -301,15 +301,24 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
         const dataMap = window.desaData || {};
         let data = dataMap[key];
         
+        // Logika fallback ini dihapus untuk mencegah pencocokan desa kembar lintas kecamatan
+        // if (!data) {
+        //   const keys = Object.keys(dataMap);
+        //   for (let i=0;i<keys.length;i++) {
+        //     const k = keys[i];
+        //     if (k.endsWith('|'+normDesa)) {
+        //       data = dataMap[k];
+        //       break;
+        //     }
+        //   }
+        // }
+        
+        // Sebagai gantinya, kita cari hanya jika nama desa unik di seluruh dataMap
         if (!data) {
-          const keys = Object.keys(dataMap);
-          for (let i=0;i<keys.length;i++) {
-            const k = keys[i];
-            if (k.endsWith('|'+normDesa)) {
-              data = dataMap[k];
-              break;
+            const potentialMatches = Object.keys(dataMap).filter(k => k.endsWith('|' + normDesa));
+            if (potentialMatches.length === 1) {
+                data = dataMap[potentialMatches[0]];
             }
-          }
         }
         
         if (data) {
@@ -386,20 +395,33 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
     }
     function updateSidebar(name, kecHint) {
       const panel = document.getElementById('desaPanel');
-      const composite = normKec(kecHint||'') + '|' + normName(name);
-      let data = window.desaData && window.desaData[composite] ? window.desaData[composite] : null;
+      const normDesa = normName(name);
+      const composite = normKec(kecHint||'') + '|' + normDesa;
+      const dataMap = window.desaData || {};
+      let data = dataMap[composite];
+      
+      // Gunakan logika yang sama ketatnya dengan pewarnaan peta
       if (!data) {
-        const onlyName = normName(name);
-        const keys = Object.keys(window.desaData||{});
-        for (let i=0;i<keys.length;i++) {
-          const k = keys[i];
-          if (k.endsWith('|'+onlyName)) { data = window.desaData[k]; break; }
-        }
+          const potentialMatches = Object.keys(dataMap).filter(k => k.endsWith('|' + normDesa));
+          if (potentialMatches.length === 1) {
+              data = dataMap[potentialMatches[0]];
+          }
       }
+      
       if (!data) {
-        panel.innerHTML = '<div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700"><div class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M11 15h2v2h-2zm0-8h2v6h-2z"/><path d="M1 21h22L12 2 1 21z"/></svg><div>Data desa tidak ditemukan untuk: <span class="font-semibold">'+esc(name)+'</span>.</div></div></div>';
-        const rp = document.getElementById('relatedPanel');
-        rp.innerHTML = '<div class="rounded-xl border border-gray-200 bg-white p-4 text-gray-600">Tidak ada berita terkait.</div>';
+        panel.innerHTML = 
+          '<div class="rounded-xl border border-dashed border-gray-300 p-4 bg-gradient-to-br from-gray-50 to-white">'+
+            '<div class="flex items-center gap-3">'+
+              '<div class="w-10 h-10 rounded-lg bg-gray-200 text-gray-500 flex items-center justify-center">'+
+                '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>'+
+              '</div>'+
+              '<div>'+
+                '<div class="text-sm font-semibold text-gray-900">'+esc(name)+'</div>'+
+                '<div class="text-xs text-gray-500">Data detail belum tersedia di database.</div>'+
+              '</div>'+
+            '</div>'+
+          '</div>';
+        document.getElementById('relatedPanel').innerHTML = '';
         return;
       }
       const url = data.alamat_website || '';
