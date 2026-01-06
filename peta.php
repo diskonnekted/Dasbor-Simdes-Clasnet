@@ -60,9 +60,12 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
   $pTypeD = 's';
   $pValsD = ['%' . $desaQ . '%'];
   if ($kecQ !== '') {
+      // Normalisasi input kecamatan: Hapus "Kec." atau "Kecamatan" agar pencarian lebih fleksibel
+      // Contoh: Input "Kec.Punggelan" -> Cari "%Punggelan%" -> Cocok dengan DB "Kecamatan Punggelan"
+      $cleanKec = trim(preg_replace('/^(kec\.?|kecamatan)\s*/i', '', $kecQ));
       $sqlD .= " AND nama_kecamatan LIKE ?";
       $pTypeD .= 's';
-      $pValsD[] = '%' . $kecQ . '%';
+      $pValsD[] = '%' . $cleanKec . '%';
   }
   $sqlD .= " LIMIT 1";
   if ($stmtD = $db->prepare($sqlD)) {
