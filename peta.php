@@ -208,15 +208,14 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div class="lg:col-span-2 bg-white rounded-xl shadow-lg ring-1 ring-gray-100">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 py-3 border-b gap-2">
-          <div class="text-xs text-gray-400">Sumber data: GeoJSON lokal</div>
-          <div class="flex flex-wrap gap-3 text-xs font-medium text-gray-600">
+        <div class="p-3">
+          <!-- Legenda Bintang -->
+          <div class="mb-2 px-1 flex flex-wrap gap-4 text-xs font-medium text-gray-600">
              <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★</span> Memiliki SID</div>
              <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★★</span> + Database</div>
              <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★★★</span> + Update Berita</div>
           </div>
-        </div>
-        <div class="p-3">
+          
           <!-- Legenda Warna -->
           <div class="mb-3 px-1 flex flex-wrap items-center gap-4 text-xs font-medium text-gray-600">
             <div class="flex items-center gap-2">
