@@ -117,41 +117,45 @@ if ($stmt) {
       </div>
     </div>
 
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-      <div class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">Menampilkan <?= count($rows) ?> dari <?= $totalRows ?> desa • Halaman <?= $page ?> dari <?= $totalPages ?></div>
-      <form method="get" class="flex flex-wrap items-center gap-2 justify-end">
+    <div class="flex flex-col xl:flex-row items-center justify-between gap-3 mb-4">
+      <div class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0 w-full xl:w-auto text-center xl:text-left">Menampilkan <?= count($rows) ?> dari <?= $totalRows ?> desa • Halaman <?= $page ?> dari <?= $totalPages ?></div>
+      <form method="get" class="flex flex-wrap xl:flex-nowrap items-center gap-2 justify-center xl:justify-end w-full xl:w-auto">
         <input type="hidden" name="page" value="1">
-        <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" class="text-sm border rounded-lg px-2 py-1 bg-white w-48" placeholder="Cari nama desa...">
-        <select name="kec" class="text-sm border rounded-lg px-2 py-1 bg-white min-w-[170px]">
-          <option value="">Semua Kecamatan</option>
+        <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" class="text-sm border rounded-lg px-2 py-1 bg-white w-full sm:w-40" placeholder="Cari desa...">
+        <select name="kec" class="text-sm border rounded-lg px-2 py-1 bg-white w-full sm:w-auto">
+          <option value="">Semua Kec.</option>
           <?php foreach ($kecamatanList as $k): ?>
             <option value="<?= htmlspecialchars($k) ?>" <?= ($kec===$k?'selected':'') ?>><?= htmlspecialchars($k) ?></option>
           <?php endforeach; ?>
         </select>
-        <select name="sid" class="text-sm border rounded-lg px-2 py-1 bg-white min-w-[170px]">
-          <option value="">Website/SID: Semua</option>
-          <option value="with" <?= ($sid==='with'?'selected':'') ?>>Punya Website/SID</option>
-          <option value="without" <?= ($sid==='without'?'selected':'') ?>>Belum Punya Website/SID</option>
+        <select name="sid" class="text-sm border rounded-lg px-2 py-1 bg-white w-full sm:w-auto">
+          <option value="">Web: Semua</option>
+          <option value="with" <?= ($sid==='with'?'selected':'') ?>>Ada Web</option>
+          <option value="without" <?= ($sid==='without'?'selected':'') ?>>Non Web</option>
         </select>
-        <select name="berita" class="text-sm border rounded-lg px-2 py-1 bg-white min-w-[170px]">
+        <select name="berita" class="text-sm border rounded-lg px-2 py-1 bg-white w-full sm:w-auto">
           <option value="">Berita: Semua</option>
-          <option value="ada" <?= ($berita==='ada'?'selected':'') ?>>Ada Berita</option>
-          <option value="tidak_ada" <?= ($berita==='tidak_ada'?'selected':'') ?>>Tidak Ada Berita</option>
+          <option value="ada" <?= ($berita==='ada'?'selected':'') ?>>Ada</option>
+          <option value="tidak_ada" <?= ($berita==='tidak_ada'?'selected':'') ?>>Tidak</option>
         </select>
-        <select name="db" class="text-sm border rounded-lg px-2 py-1 bg-white min-w-[170px]">
-          <option value="">DB Penduduk: Semua</option>
-          <option value="sudah" <?= ($dbf==='sudah'?'selected':'') ?>>Sudah Ada</option>
-          <option value="belum" <?= ($dbf==='belum'?'selected':'') ?>>Belum Ada</option>
+        <select name="db" class="text-sm border rounded-lg px-2 py-1 bg-white w-full sm:w-auto">
+          <option value="">DB: Semua</option>
+          <option value="sudah" <?= ($dbf==='sudah'?'selected':'') ?>>Ada</option>
+          <option value="belum" <?= ($dbf==='belum'?'selected':'') ?>>Belum</option>
         </select>
-        <label for="per" class="text-sm text-gray-600 whitespace-nowrap">Per halaman</label>
-        <select id="per" name="per" class="text-sm border rounded-lg px-2 py-1 bg-white w-24">
-          <option value="25" <?= $perPage==25?'selected':'' ?>>25</option>
-          <option value="50" <?= $perPage==50?'selected':'' ?>>50</option>
-          <option value="100" <?= $perPage==100?'selected':'' ?>>100</option>
-          <option value="200" <?= $perPage==200?'selected':'' ?>>200</option>
-        </select>
-        <button type="submit" class="text-sm px-3 py-1 rounded-lg border bg-white shadow-sm hover:bg-gray-50">Terapkan</button>
-        <a href="desa.php" class="text-sm px-3 py-1 rounded-lg border bg-white shadow-sm hover:bg-gray-50">Reset</a>
+        <div class="flex items-center gap-2 whitespace-nowrap">
+            <label for="per" class="text-sm text-gray-600 hidden sm:inline">Per hal</label>
+            <select id="per" name="per" class="text-sm border rounded-lg px-2 py-1 bg-white w-16">
+            <option value="25" <?= $perPage==25?'selected':'' ?>>25</option>
+            <option value="50" <?= $perPage==50?'selected':'' ?>>50</option>
+            <option value="100" <?= $perPage==100?'selected':'' ?>>100</option>
+            <option value="200" <?= $perPage==200?'selected':'' ?>>200</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-center">
+            <button type="submit" class="text-sm px-3 py-1 rounded-lg border bg-blue-600 text-white shadow-sm hover:bg-blue-700">Cari</button>
+            <a href="desa.php" class="text-sm px-3 py-1 rounded-lg border bg-white shadow-sm hover:bg-gray-50 text-gray-600">Reset</a>
+        </div>
       </form>
     </div>
 
