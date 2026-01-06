@@ -15,8 +15,22 @@ $db->query("CREATE TABLE IF NOT EXISTS berita (
   gambar VARCHAR(255) DEFAULT NULL,
   dibuat_pada DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   published TINYINT(1) NOT NULL DEFAULT 1,
-  author VARCHAR(100) DEFAULT 'Clasnet Group'
+  author VARCHAR(100) DEFAULT 'Clasnet Group',
+  tags VARCHAR(255) DEFAULT NULL,
+  related_desa VARCHAR(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+// Pastikan kolom tags dan related_desa ada (untuk update skema lama)
+$cols = [];
+if ($res = $db->query("SHOW COLUMNS FROM berita")) {
+  while ($r = $res->fetch_assoc()) { $cols[] = $r['Field']; }
+}
+if (!in_array('tags', $cols)) {
+  $db->query("ALTER TABLE berita ADD COLUMN tags VARCHAR(255) DEFAULT NULL AFTER author");
+}
+if (!in_array('related_desa', $cols)) {
+  $db->query("ALTER TABLE berita ADD COLUMN related_desa VARCHAR(255) DEFAULT NULL AFTER tags");
+}
 
 // Tabel foto pendukung per berita
 $db->query("CREATE TABLE IF NOT EXISTS berita_foto (
@@ -36,6 +50,14 @@ function sanitize_filename($name) {
   return $name;
 }
 
+// Ambil daftar desa untuk pilihan
+$desaList = [];
+if ($res = $db->query("SELECT id, nama_desa, nama_kecamatan FROM desa ORDER BY nama_kecamatan ASC, nama_desa ASC")) {
+  while ($row = $res->fetch_assoc()) {
+    $desaList[] = $row;
+  }
+}
+
 // Handle Create/Update/Delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';
@@ -44,6 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isi = trim($_POST['isi'] ?? '');
     $published = isset($_POST['published']) ? 1 : 0;
     $author = trim($_POST['author'] ?? 'Clasnet Group');
+    $tags = trim($_POST['tags'] ?? '');
+    $related_desa_arr = $_POST['related_desa'] ?? [];
+    $related_desa = is_array($related_desa_arr) ? implode(',', $related_desa_arr) : '';
     $tanggal = trim($_POST['tanggal'] ?? '');
     $dibuat_pada = $tanggal !== '' ? date('Y-m-d H:i:s', strtotime($tanggal)) : date('Y-m-d H:i:s');
 
@@ -70,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'create' && $judul !== '' && $isi !== '') {
-      $stmt = $db->prepare("INSERT INTO berita (judul, isi, gambar, dibuat_pada, published, author) VALUES (?, ?, ?, ?, ?, ?)");
-      $stmt->bind_param('ssssis', $judul, $isi, $gambarPath, $dibuat_pada, $published, $author);
+      $stmt = $db->prepare("INSERT INTO berita (judul, isi, gambar, dibuat_pada, published, author, tags, related_desa) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+      $stmt->bind_param('ssssisss', $judul, $isi, $gambarPath, $dibuat_pada, $published, $author, $tags, $related_desa);
       $stmt->execute();
       $newId = $stmt->insert_id;
 
@@ -105,11 +130,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $id = (int)($_POST['id'] ?? 0);
       if ($id > 0 && $judul !== '' && $isi !== '') {
         if ($gambarPath) {
-          $stmt = $db->prepare("UPDATE berita SET judul=?, isi=?, gambar=?, dibuat_pada=?, published=?, author=? WHERE id=?");
-          $stmt->bind_param('ssssisi', $judul, $isi, $gambarPath, $dibuat_pada, $published, $author, $id);
+          $stmt = $db->prepare("UPDATE berita SET judul=?, isi=?, gambar=?, dibuat_pada=?, published=?, author=?, tags=?, related_desa=? WHERE id=?");
+          $stmt->bind_param('ssssisssi', $judul, $isi, $gambarPath, $dibuat_pada, $published, $author, $tags, $related_desa, $id);
         } else {
-$stmt = $db->prepare("UPDATE berita SET judul=?, isi=?, dibuat_pada=?, published=?, author=? WHERE id=?");
-$stmt->bind_param('sssisi', $judul, $isi, $dibuat_pada, $published, $author, $id);
+          $stmt = $db->prepare("UPDATE berita SET judul=?, isi=?, dibuat_pada=?, published=?, author=?, tags=?, related_desa=? WHERE id=?");
+          $stmt->bind_param('sssisssi', $judul, $isi, $dibuat_pada, $published, $author, $tags, $related_desa, $id);
         }
         $stmt->execute();
 
@@ -268,6 +293,22 @@ if ($res = $db->query("SELECT id, judul, dibuat_pada, published, gambar FROM ber
           <div>
             <label class="text-sm text-gray-700">Author</label>
             <input type="text" name="author" class="mt-1 w-full border rounded-lg px-3 py-2" value="<?= htmlspecialchars($editing['author'] ?? 'Clasnet Group') ?>">
+          </div>
+          <div>
+            <label class="text-sm text-gray-700">Tags (pisahkan dengan koma atau spasi)</label>
+            <input type="text" name="tags" placeholder="#kegiatan #desa" class="mt-1 w-full border rounded-lg px-3 py-2" value="<?= htmlspecialchars($editing['tags'] ?? '') ?>">
+          </div>
+          <div>
+            <label class="text-sm text-gray-700">Desa Terkait</label>
+            <?php $currentRelated = explode(',', $editing['related_desa'] ?? ''); ?>
+            <select name="related_desa[]" multiple size="5" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white">
+              <?php foreach ($desaList as $d): ?>
+                <option value="<?= $d['id'] ?>" <?= in_array($d['id'], $currentRelated) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($d['nama_desa']) ?> (<?= htmlspecialchars($d['nama_kecamatan']) ?>)
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">Tahan tombol Ctrl (Windows) atau Command (Mac) untuk memilih lebih dari satu.</p>
           </div>
           <div>
             <label class="text-sm text-gray-700">Gambar (JPG/PNG/WebP)</label>

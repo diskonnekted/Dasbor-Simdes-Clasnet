@@ -4,9 +4,9 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/config.php';
 $db = db();
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$post = null; $gallery = [];
+$post = null; $gallery = []; $relatedDesaList = [];
 if ($id > 0) {
-  if ($res = $db->prepare("SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 AND id=?")) {
+  if ($res = $db->prepare("SELECT id, judul, isi, gambar, dibuat_pada, author, tags, related_desa FROM berita WHERE published=1 AND id=?")) {
     $res->bind_param('i', $id);
     $res->execute();
     $result = $res->get_result();
@@ -14,6 +14,22 @@ if ($id > 0) {
     $res->close();
   }
   if ($post) {
+    // Ambil data desa terkait
+    if (!empty($post['related_desa'])) {
+      $ids = array_filter(array_map('intval', explode(',', $post['related_desa'])));
+      if (!empty($ids)) {
+        $in = str_repeat('?,', count($ids) - 1) . '?';
+        $types = str_repeat('i', count($ids));
+        if ($stmtD = $db->prepare("SELECT id, nama_desa, nama_kecamatan FROM desa WHERE id IN ($in) ORDER BY nama_kecamatan, nama_desa")) {
+          $stmtD->bind_param($types, ...$ids);
+          $stmtD->execute();
+          $resD = $stmtD->get_result();
+          while ($rd = $resD->fetch_assoc()) { $relatedDesaList[] = $rd; }
+          $stmtD->close();
+        }
+      }
+    }
+
     if ($stmtG = $db->prepare('SELECT id, path FROM berita_foto WHERE berita_id=? ORDER BY urutan ASC, id ASC')) {
       $stmtG->bind_param('i', $id);
       $stmtG->execute();
@@ -72,6 +88,25 @@ if ($id > 0) {
             </div>
             <h1 class="text-base font-semibold mt-1 text-gray-900"><?= htmlspecialchars($post['judul']) ?></h1>
             <div class="content prose prose-sm max-w-none mt-2 text-gray-800"><?= $post['isi'] ?></div>
+            
+            <?php if (!empty($relatedDesaList)): ?>
+              <div class="mt-4 pt-3 border-t border-gray-100">
+                <div class="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Desa Terkait
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <?php foreach ($relatedDesaList as $rd): ?>
+                    <a href="mobile_desa.php?q=<?= urlencode($rd['nama_desa']) ?>" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-700 active:bg-blue-50 active:border-blue-200 active:text-blue-700 transition-colors">
+                      <span class="font-medium"><?= htmlspecialchars($rd['nama_desa']) ?></span>
+                      <span class="text-[10px] text-gray-400 border-l border-gray-300 pl-1.5 ml-1"><?= htmlspecialchars($rd['nama_kecamatan']) ?></span>
+                    </a>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php endif; ?>
           </div>
           <?php if (!empty($gallery)): ?>
           <div class="px-3 pb-3">

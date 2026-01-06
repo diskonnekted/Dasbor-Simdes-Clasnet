@@ -28,11 +28,12 @@ $params = [];
 $types = "";
 
 if ($q !== '') {
-    $where .= " AND (judul LIKE ? OR isi LIKE ?)";
+    $where .= " AND (judul LIKE ? OR isi LIKE ? OR tags LIKE ?)";
     $like = '%' . $q . '%';
     $params[] = $like;
     $params[] = $like;
-    $types .= "ss";
+    $params[] = $like;
+    $types .= "sss";
 }
 
 if ($stmt = $db->prepare("SELECT COUNT(*) AS c FROM berita WHERE $where")) {
@@ -53,7 +54,7 @@ $offset = ($page - 1) * $perPage;
 
 // Ambil data halaman aktif
 $berita = [];
-$sql = "SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE $where ORDER BY dibuat_pada DESC LIMIT ? OFFSET ?";
+$sql = "SELECT id, judul, isi, gambar, dibuat_pada, author, tags FROM berita WHERE $where ORDER BY dibuat_pada DESC LIMIT ? OFFSET ?";
 if ($stmt = $db->prepare($sql)) {
     $limitParams = array_merge($params, [$perPage, $offset]);
     $limitTypes = $types . "ii";
@@ -158,6 +159,17 @@ function excerpt($text, $len = 180) {
               </div>
               <h2 class="text-base md:text-lg font-semibold mt-2 text-gray-900"><?= htmlspecialchars($b['judul']) ?></h2>
               <p class="text-sm md:text-sm text-gray-700 mt-1"><?= htmlspecialchars(excerpt($b['isi'])) ?></p>
+              <?php if (!empty($b['tags'])): ?>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <?php foreach(explode(' ', str_replace([',', '#'], [' ', ''], $b['tags'])) as $tag): ?>
+                    <?php if(trim($tag) !== ''): ?>
+                      <span class="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600">
+                        #<?= htmlspecialchars(trim($tag)) ?>
+                      </span>
+                    <?php endif; ?>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
             </div>
           </article>
           </a>
