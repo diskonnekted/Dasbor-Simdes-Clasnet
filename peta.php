@@ -62,6 +62,7 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
   
   // Cari ID Desa berdasarkan nama (dan kecamatan jika ada)
   $desaId = 0;
+  $cleanKec = '';
   $sqlD = "SELECT id FROM desa WHERE nama_desa LIKE ?";
   $pTypeD = 's';
   $pValsD = ['%' . $desaQ . '%'];
@@ -86,10 +87,25 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
   $like = '%' . $desaQ . '%';
   $items = [];
   
-  $sql = "SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 AND (judul LIKE ? OR isi LIKE ?";
+  // Build Query:
+  // ( (Title/Isi match Desa) AND (Optional: Title/Isi match Kec) ) OR (related_desa match ID)
+  
+  $sql = "SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 AND (";
+  
+  // Text Match Group
+  $sql .= "((judul LIKE ? OR isi LIKE ?)";
   $types = "ss";
   $params = [$like, $like];
   
+  if ($cleanKec !== '') {
+      $likeKec = '%' . $cleanKec . '%';
+      $sql .= " AND (judul LIKE ? OR isi LIKE ?)";
+      $types .= "ss";
+      $params[] = $likeKec;
+      $params[] = $likeKec;
+  }
+  $sql .= ")"; // End Text Match Group
+
   if ($desaId > 0) {
       $sql .= " OR FIND_IN_SET(?, related_desa) > 0";
       $types .= "i";
