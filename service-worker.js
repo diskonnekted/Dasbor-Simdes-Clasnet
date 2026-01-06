@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sid-pwa-v3';
+const CACHE_NAME = 'sid-pwa-v4';
 const URLS_TO_CACHE = ['/', '/index.php', '/mobile.php', '/mobile_desa.php', '/mobile_kegiatan.php', '/mobile_inovasi.php', '/mobile_kontak.php', '/mobile_peta.php', '/mobile_statistik.php', '/peta_desa.geojson', '/clasnet.png', '/footer.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(URLS_TO_CACHE)).then(() => self.skipWaiting()));
@@ -19,6 +19,11 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin === self.location.origin) {
+    // Jangan cache request AJAX untuk berita terkait
+    if (url.searchParams.has('related') || url.searchParams.has('ajax_berita')) {
+        e.respondWith(fetch(e.request));
+        return;
+    }
     e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
       const copy = resp.clone();
       caches.open(CACHE_NAME).then(c => c.put(e.request, copy));

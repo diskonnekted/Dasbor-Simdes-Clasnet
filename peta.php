@@ -379,7 +379,7 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
         '</div>';
       const safeName = data.nama_desa || name || '';
       const safeKec = data.nama_kecamatan || kecHint || '';
-      fetch('peta.php?related=1&desa='+encodeURIComponent(safeName)+'&kec='+encodeURIComponent(safeKec))
+      fetch('peta.php?related=1&desa='+encodeURIComponent(safeName)+'&kec='+encodeURIComponent(safeKec)+'&_t='+Date.now())
         .then(r => r.json())
         .then(j => {
           const items = j && j.items ? j.items : [];
