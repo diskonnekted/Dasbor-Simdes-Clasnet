@@ -87,8 +87,28 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
   $like = '%' . $desaQ . '%';
   $items = [];
   
-  // Build Query:
-  // ( (Title/Isi match Desa) AND (Optional: Title/Isi match Kec) ) OR (related_desa match ID)
+  // Cek apakah nama desa ini ambigu (ada di lebih dari satu kecamatan)
+  $isAmbiguous = false;
+  $sqlCheck = "SELECT COUNT(DISTINCT nama_kecamatan) as cnt FROM desa WHERE nama_desa LIKE ?";
+  if ($stmtCheck = $db->prepare($sqlCheck)) {
+      $likeCheck = '%' . $desaQ . '%';
+      $stmtCheck->bind_param('s', $likeCheck);
+      $stmtCheck->execute();
+      $resCheck = $stmtCheck->get_result()->fetch_assoc();
+      if ($resCheck && (int)$resCheck['cnt'] > 1) {
+          $isAmbiguous = true;
+      }
+      $stmtCheck->close();
+  }
+
+  // Build Query Berita
+  // Logika:
+  // 1. Text Match:
+  //    - Selalu cari Nama Desa.
+  //    - Jika nama desa AMBIGU (pasaran) DAN kecamatan disediakan: WAJIB cari Nama Kecamatan juga.
+  //    - Jika nama desa UNIK (hanya 1 kecamatan) ATAU kecamatan tidak disediakan: TIDAK PERLU cari Nama Kecamatan (opsional).
+  // 2. ID Match:
+  //    - Selalu cari related_desa ID jika desa ditemukan.
   
   $sql = "SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 AND (";
   
@@ -97,7 +117,8 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
   $types = "ss";
   $params = [$like, $like];
   
-  if ($cleanKec !== '') {
+  // Hanya tambahkan filter kecamatan jika desa ambigu DAN kecamatan tersedia
+  if ($isAmbiguous && $cleanKec !== '') {
       $likeKec = '%' . $cleanKec . '%';
       $sql .= " AND (judul LIKE ? OR isi LIKE ?)";
       $types .= "ss";
