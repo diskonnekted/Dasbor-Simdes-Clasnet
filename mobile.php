@@ -19,6 +19,15 @@ FROM desa");
 if ($q3) { $r = $q3->fetch_assoc(); $active = (int)$r['a']; $inactive = (int)$r['i']; $unknown = (int)$r['u']; }
 $websitePct = $total > 0 ? round(($withWebsite / $total) * 100) : 0;
 $inactivePct= $total > 0 ? round(($withoutWebsite / $total) * 100) : 0;
+@$db->query("CREATE TABLE IF NOT EXISTS berita (id INT AUTO_INCREMENT PRIMARY KEY, judul VARCHAR(255) NOT NULL, isi TEXT NOT NULL, gambar VARCHAR(255) DEFAULT NULL, dibuat_pada DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, published TINYINT(1) NOT NULL DEFAULT 1, author VARCHAR(100) DEFAULT 'Clasnet Group') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+$latestNews = [];
+if ($res = $db->query("SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 ORDER BY dibuat_pada DESC LIMIT 4")) {
+  while ($row = $res->fetch_assoc()) { $latestNews[] = $row; }
+}
+function excerpt_mobile($text, $len = 90) {
+  $plain = strip_tags($text ?? '');
+  return mb_strlen($plain) <= $len ? $plain : mb_substr($plain, 0, $len) . '…';
+}
 ?>
 <!doctype html>
 <html lang="id">
@@ -107,6 +116,35 @@ $inactivePct= $total > 0 ? round(($withoutWebsite / $total) * 100) : 0;
         </div>
       </div>
     </div>
+    <?php if (!empty($latestNews)): ?>
+      <div class="bg-white rounded-xl shadow p-4 mb-4">
+        <div class="flex items-center justify-between">
+          <div class="text-sm font-medium">Kegiatan Terbaru</div>
+          <a href="mobile_kegiatan.php" class="text-xs text-blue-600">Lihat semua</a>
+        </div>
+        <div class="mt-3 space-y-3">
+          <?php foreach ($latestNews as $b): ?>
+          <a href="berita.php?id=<?= (int)$b['id'] ?>" class="block">
+            <article class="flex gap-3">
+              <?php $imgRel = !empty($b['gambar']) ? $b['gambar'] : null; $imgOk = $imgRel && file_exists(__DIR__ . '/' . $imgRel); ?>
+              <?php if ($imgOk): ?>
+                <img src="<?= htmlspecialchars($imgRel) ?>" alt="<?= htmlspecialchars($b['judul']) ?>" class="w-20 h-20 rounded object-cover flex-shrink-0">
+              <?php else: ?>
+                <div class="w-20 h-20 rounded bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14l4-4h12l4 4zM7 9h10v2H7V9zm0 4h7v2H7v-2z"/></svg>
+                </div>
+              <?php endif; ?>
+              <div class="flex-1">
+                <div class="text-[11px] text-gray-500"><?= date('d M Y', strtotime($b['dibuat_pada'])) ?> • <?= htmlspecialchars($b['author'] ?: 'Clasnet Group') ?></div>
+                <div class="text-sm font-semibold"><?= htmlspecialchars($b['judul']) ?></div>
+                <div class="text-xs text-gray-700"><?= htmlspecialchars(excerpt_mobile($b['isi'])) ?></div>
+              </div>
+            </article>
+          </a>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    <?php endif; ?>
   </main>
   <nav class="fixed bottom-0 left-0 right-0 bg-white border-t z-20">
     <div class="grid grid-cols-5 text-xs text-gray-600">
