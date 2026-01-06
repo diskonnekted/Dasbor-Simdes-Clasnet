@@ -117,8 +117,7 @@ if ($stmt) {
       </div>
     </div>
 
-    <div class="flex flex-col xl:flex-row items-center justify-between gap-3 mb-4">
-      <div class="text-sm text-gray-600 whitespace-nowrap flex-shrink-0 w-full xl:w-auto text-center xl:text-left">Menampilkan <?= count($rows) ?> dari <?= $totalRows ?> desa • Halaman <?= $page ?> dari <?= $totalPages ?></div>
+    <div class="flex flex-col xl:flex-row items-center justify-end gap-3 mb-4">
       <form method="get" class="flex flex-wrap xl:flex-nowrap items-center gap-2 justify-center xl:justify-end w-full xl:w-auto">
         <input type="hidden" name="page" value="1">
         <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" class="text-sm border rounded-lg px-2 py-1 bg-white w-full sm:w-40" placeholder="Cari desa...">
