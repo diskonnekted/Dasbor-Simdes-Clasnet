@@ -62,7 +62,7 @@ $offset = ($page - 1) * $perPage;
 
 // Ambil data dengan filter + paginate
 $rows = [];
-$sql = 'SELECT id, nama_kecamatan, nama_desa, alamat_website, last_checked_at, jumlah_penduduk, db_penduduk FROM desa';
+$sql = 'SELECT id, nama_kecamatan, nama_desa, alamat_website, last_checked_at, jumlah_penduduk, db_penduduk, developer FROM desa';
 if (!empty($where)) { $sql .= ' WHERE ' . implode(' AND ', $where); }
 $sql .= ' ORDER BY nama_kecamatan, nama_desa LIMIT ? OFFSET ?';
 $stmt = $db->prepare($sql);
