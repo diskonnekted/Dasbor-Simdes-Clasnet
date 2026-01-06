@@ -52,6 +52,8 @@ if ($res = $db->query("SELECT id, nama_kecamatan, nama_desa, alamat_website, jum
   }
 }
 if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
+  error_reporting(0);
+  ini_set('display_errors', 0);
   header('Content-Type: application/json');
   // Normalisasi input desa: Hapus "Desa" agar pencarian lebih fleksibel
   $desaQ = trim(preg_replace('/^\s*desa\s+/i', '', trim($_GET['desa'] ?? '')));
