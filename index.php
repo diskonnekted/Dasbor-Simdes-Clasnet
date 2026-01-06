@@ -5,6 +5,17 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/config.php';
 $db = db();
 
+$ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+if (isset($_GET['view']) && $_GET['view'] === 'desktop') {
+  setcookie('force_desktop', '1', time() + 60*60*24*30, '/');
+}
+if (!isset($_COOKIE['force_desktop'])) {
+  if (preg_match('/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua)) {
+    header('Location: mobile.php');
+    exit;
+  }
+}
+
 $total = 0; $withWebsite = 0; $withoutWebsite = 0; $active = 0; $inactive = 0; $unknown = 0;
 $q1 = $db->query("SELECT COUNT(*) AS c FROM desa");
 if ($q1) { $r = $q1->fetch_assoc(); $total = (int)$r['c']; }
