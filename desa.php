@@ -300,7 +300,7 @@ if ($stmt) {
                             <div class="truncate" id="modalWeb"></div>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 sm:col-span-2">
-                            <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Developer</div>
+                            <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Pendampingan Digitalisasi</div>
                             <div class="font-medium text-gray-900" id="modalDev"></div>
                         </div>
                     </div>

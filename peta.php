@@ -460,7 +460,7 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
               '<div>'+urlHtml+'</div>'+
             '</div>'+
             '<div class="mt-3 flex items-center justify-between border-t pt-2">'+
-              '<div class="text-sm text-gray-600">Developer</div>'+
+              '<div class="text-sm text-gray-600">Pendampingan Digitalisasi</div>'+
               '<div class="text-sm font-medium text-gray-800">'+esc(dev)+'</div>'+
             '</div>'+
           '</div>';
