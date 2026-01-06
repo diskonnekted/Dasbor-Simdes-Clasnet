@@ -53,7 +53,8 @@ if ($res = $db->query("SELECT id, nama_kecamatan, nama_desa, alamat_website, jum
 }
 if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
   header('Content-Type: application/json');
-  $desaQ = trim($_GET['desa'] ?? '');
+  // Normalisasi input desa: Hapus "Desa" agar pencarian lebih fleksibel
+  $desaQ = trim(preg_replace('/^\s*desa\s+/i', '', trim($_GET['desa'] ?? '')));
   $kecQ = trim($_GET['kecamatan'] ?? $_GET['kec'] ?? '');
   if ($desaQ === '') { echo json_encode(['items'=>[]]); exit; }
   
