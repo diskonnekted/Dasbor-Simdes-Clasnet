@@ -112,6 +112,12 @@
       </a>
     </div>
   </nav>
-  <?php include __DIR__ . '/partials/footer.php'; ?>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/service-worker.js');
+    });
+  }
+  </script>
 </body>
 </html>

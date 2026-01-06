@@ -97,8 +97,12 @@ $selectedKec = $labels[0] ?? '';
       </a>
     </div>
   </nav>
-  <?php include __DIR__ . '/partials/footer.php'; ?>
   <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/service-worker.js');
+      });
+    }
     const rows = <?= json_encode($agg, JSON_UNESCAPED_UNICODE) ?>;
     const labels = <?= json_encode($labels, JSON_UNESCAPED_UNICODE) ?>;
     const withSid = <?= json_encode($withSid) ?>;
