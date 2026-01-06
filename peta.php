@@ -53,10 +53,43 @@ if (isset($_GET['related'])) {
   $desaQ = trim($_GET['desa'] ?? '');
   $kecQ = trim($_GET['kec'] ?? '');
   if ($desaQ === '') { echo json_encode(['items'=>[]]); exit; }
+  
+  // Cari ID Desa berdasarkan nama (dan kecamatan jika ada)
+  $desaId = 0;
+  $sqlD = "SELECT id FROM desa WHERE nama_desa LIKE ?";
+  $pTypeD = 's';
+  $pValsD = ['%' . $desaQ . '%'];
+  if ($kecQ !== '') {
+      $sqlD .= " AND nama_kecamatan LIKE ?";
+      $pTypeD .= 's';
+      $pValsD[] = '%' . $kecQ . '%';
+  }
+  $sqlD .= " LIMIT 1";
+  if ($stmtD = $db->prepare($sqlD)) {
+      $stmtD->bind_param($pTypeD, ...$pValsD);
+      $stmtD->execute();
+      if ($rD = $stmtD->get_result()->fetch_assoc()) {
+          $desaId = (int)$rD['id'];
+      }
+      $stmtD->close();
+  }
+
   $like = '%' . $desaQ . '%';
   $items = [];
-  if ($stmt = $db->prepare("SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 AND (judul LIKE ? OR isi LIKE ?) ORDER BY dibuat_pada DESC LIMIT 5")) {
-    $stmt->bind_param('ss', $like, $like);
+  
+  $sql = "SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 AND (judul LIKE ? OR isi LIKE ?";
+  $types = "ss";
+  $params = [$like, $like];
+  
+  if ($desaId > 0) {
+      $sql .= " OR FIND_IN_SET(?, related_desa) > 0";
+      $types .= "i";
+      $params[] = $desaId;
+  }
+  $sql .= ") ORDER BY dibuat_pada DESC LIMIT 5";
+
+  if ($stmt = $db->prepare($sql)) {
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $res = $stmt->get_result();
     while ($b = $res->fetch_assoc()) {
