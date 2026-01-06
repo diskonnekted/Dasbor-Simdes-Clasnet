@@ -19,21 +19,52 @@ $db->query("CREATE TABLE IF NOT EXISTS berita (
 // Paginasi
 $perPage = 9;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$q = isset($_GET['q']) ? trim($_GET['q']) : '';
+
 // Hitung total published
 $totalItems = 0;
-if ($cnt = $db->query("SELECT COUNT(*) AS c FROM berita WHERE published=1")) { $r = $cnt->fetch_assoc(); $totalItems = (int)$r['c']; }
+$where = "published=1";
+$params = [];
+$types = "";
+
+if ($q !== '') {
+    $where .= " AND (judul LIKE ? OR isi LIKE ?)";
+    $like = '%' . $q . '%';
+    $params[] = $like;
+    $params[] = $like;
+    $types .= "ss";
+}
+
+if ($stmt = $db->prepare("SELECT COUNT(*) AS c FROM berita WHERE $where")) {
+    if ($types) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($row = $res->fetch_assoc()) {
+        $totalItems = (int)$row['c'];
+    }
+    $stmt->close();
+}
+
 $totalPages = $perPage > 0 ? max(1, (int)ceil($totalItems / $perPage)) : 1;
 if ($page > $totalPages) { $page = $totalPages; }
 $offset = ($page - 1) * $perPage;
 
 // Ambil data halaman aktif
 $berita = [];
-$sql = sprintf(
-  "SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE published=1 ORDER BY dibuat_pada DESC LIMIT %d OFFSET %d",
-  $perPage,
-  $offset
-);
-if ($res = $db->query($sql)) { while ($r = $res->fetch_assoc()) { $berita[] = $r; } }
+$sql = "SELECT id, judul, isi, gambar, dibuat_pada, author FROM berita WHERE $where ORDER BY dibuat_pada DESC LIMIT ? OFFSET ?";
+if ($stmt = $db->prepare($sql)) {
+    $limitParams = array_merge($params, [$perPage, $offset]);
+    $limitTypes = $types . "ii";
+    $stmt->bind_param($limitTypes, ...$limitParams);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($r = $res->fetch_assoc()) {
+        $berita[] = $r;
+    }
+    $stmt->close();
+}
 
 function excerpt($text, $len = 180) {
   $plain = strip_tags($text);
@@ -65,14 +96,32 @@ function excerpt($text, $len = 180) {
   </header>
   <div class="max-w-7xl mx-auto px-4 py-8">
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white shadow-lg p-6 mb-6">
-      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 class="text-xl md:text-2xl font-semibold">Kegiatan SID oleh Clasnet Group</h1>
           <p class="text-xs md:text-sm mt-1 opacity-90">Berita dan dokumentasi aktivitas pengembangan dan pendampingan SID.</p>
           <p class="text-[11px] md:text-xs mt-2 opacity-80">Statistik dan konten dikelola oleh <span class="font-semibold">Clasnet Group</span> — <a href="https://www.clasnet.co.id" target="_blank" class="underline">www.clasnet.co.id</a></p>
         </div>
-        <div class="p-3 rounded-lg bg-white/10 self-start md:self-auto">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7 md:w-8 md:h-8 opacity-90"><path d="M12 2l4 4H8l4-4zm8 8H4v10h16V10zm-2 2v6H6v-6h12z"/></svg>
+        
+        <div class="w-full md:w-auto min-w-[300px]">
+           <form method="get" action="" class="relative text-gray-700">
+             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+               <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+               </svg>
+             </div>
+             <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" 
+                    class="block w-full pl-10 pr-20 py-2.5 rounded-lg border-0 bg-white/10 text-white placeholder-white/60 ring-1 ring-white/20 focus:ring-2 focus:ring-white/50 focus:bg-white/20 sm:text-sm transition backdrop-blur-sm" 
+                    placeholder="Cari kegiatan...">
+             <?php if($q !== ''): ?>
+             <a href="kegiatan.php" class="absolute inset-y-0 right-16 flex items-center px-2 text-white/70 hover:text-white">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+             </a>
+             <?php endif; ?>
+             <button type="submit" class="absolute inset-y-1 right-1 px-4 text-xs font-medium text-blue-700 bg-white rounded-md hover:bg-blue-50 focus:outline-none shadow-sm transition-colors">
+               Cari
+             </button>
+           </form>
         </div>
       </div>
     </div>

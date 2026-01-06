@@ -289,9 +289,9 @@ if (isset($_GET['related'])) {
         : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Tidak ada website</span>';
       const dbp = (data.db_penduduk||'').toString().trim();
       const dbpUpper = dbp.toUpperCase();
-      let dbBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Tidak diketahui</span>';
-      if (dbpUpper === 'SUDAH ADA') dbBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">Sudah Ada</span>';
-      else if (dbpUpper === 'BELUM ADA') dbBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700">Belum Ada</span>';
+      let dbBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Status DB Tidak Diketahui</span>';
+      if (dbpUpper === 'SUDAH ADA') dbBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">Database Penduduk Tersedia</span>';
+      else if (dbpUpper === 'BELUM ADA') dbBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700">Database Penduduk Belum Ada</span>';
       const linkDesa = 'desa.php?q=' + encodeURIComponent(data.nama_desa || name);
       const stars = parseInt(data.stars||0, 10);
       const starStr = stars > 0 ? ' <span class="text-amber-500 text-sm">'+'★'.repeat(stars)+'</span>' : '';
