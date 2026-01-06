@@ -5,12 +5,45 @@ require_once __DIR__ . '/config.php';
 $db = db();
 $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
 $desaData = [];
+$newsContent = '';
+if ($nRes = $db->query("SELECT judul, isi FROM berita WHERE published=1")) {
+  while ($row = $nRes->fetch_assoc()) {
+    $newsContent .= ' ' . strip_tags($row['judul'] . ' ' . $row['isi']);
+  }
+}
+$newsContent = mb_strtolower($newsContent);
+
 if ($res = $db->query("SELECT id, nama_kecamatan, nama_desa, alamat_website, jumlah_penduduk, db_penduduk FROM desa")) {
   while ($r = $res->fetch_assoc()) {
     $desaRaw = trim($r['nama_desa'] ?? '');
     $kecRaw = trim($r['nama_kecamatan'] ?? '');
     $desaNorm = mb_strtolower(preg_replace('/\s+/', ' ', preg_replace('/^\s*desa\s+/i', '', $desaRaw)));
     $kecNorm = mb_strtolower(preg_replace('/\s+/', ' ', $kecRaw));
+    
+    // Hitung Bintang
+    $stars = 0;
+    $hasWebsite = !empty($r['alamat_website']);
+    $hasDb = isset($r['db_penduduk']) && strtoupper($r['db_penduduk']) === 'SUDAH ADA';
+    $hasNews = false;
+    
+    if ($desaNorm !== '') {
+        // Cek apakah nama desa ada di berita (whole word match)
+        if (preg_match('/\b'.preg_quote($desaNorm, '/').'\b/', $newsContent)) {
+            $hasNews = true;
+        }
+    }
+
+    if ($hasWebsite) {
+        $stars = 1;
+        if ($hasDb) {
+            $stars = 2;
+            if ($hasNews) {
+                $stars = 3;
+            }
+        }
+    }
+    $r['stars'] = $stars;
+
     $key = $kecNorm . '|' . $desaNorm;
     if ($desaNorm !== '') { $desaData[$key] = $r; }
   }
@@ -48,8 +81,11 @@ if (isset($_GET['related'])) {
 <html lang="id">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Peta Sebaran SID</title>
+  <title>Peta Sebaran SID (v2)</title>
   <link rel="icon" href="clasnet.png" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
@@ -93,14 +129,13 @@ if (isset($_GET['related'])) {
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div class="lg:col-span-2 bg-white rounded-xl shadow-lg ring-1 ring-gray-100">
-        <div class="flex items-center justify-between px-4 py-3 border-b">
-          <div>
-            <div class="text-xs text-gray-400">Sumber data: GeoJSON dari repo Clasnet</div>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 py-3 border-b gap-2">
+          <div class="text-xs text-gray-400">Sumber data: GeoJSON lokal</div>
+          <div class="flex flex-wrap gap-3 text-xs font-medium text-gray-600">
+             <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★</span> Memiliki SID</div>
+             <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★★</span> + Database</div>
+             <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★★★</span> + Update Berita</div>
           </div>
-          <a href="https://github.com/Clasnet/clasnet-peta-desa" target="_blank" class="inline-flex items-center gap-2 px-3 py-1 rounded-lg border bg-white shadow-sm hover:bg-gray-50 text-sm">
-            Repo Peta
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M14 3h7v7h-2V6.41l-6.29 6.3-1.42-1.42L17.59 5H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5V5z"/></svg>
-          </a>
         </div>
         <div class="p-3">
           <div class="relative w-full map-wrap rounded-lg overflow-hidden ring-1 ring-gray-100">
@@ -160,28 +195,38 @@ if (isset($_GET['related'])) {
         const normKec = (kec||'').toLowerCase().trim().replace(/\s+/g,' ');
         const key = normKec + '|' + normDesa;
         let hasWebsite = false;
+        let starCount = 0;
         const dataMap = window.desaData || {};
-        if (dataMap[key]) {
-          const url = (dataMap[key].alamat_website || '').trim();
-          hasWebsite = url !== '';
-        } else {
+        let data = dataMap[key];
+        
+        if (!data) {
           const keys = Object.keys(dataMap);
           for (let i=0;i<keys.length;i++) {
             const k = keys[i];
             if (k.endsWith('|'+normDesa)) {
-              const url = (dataMap[k].alamat_website || '').trim();
-              hasWebsite = url !== '';
+              data = dataMap[k];
               break;
             }
           }
         }
+        
+        if (data) {
+            const url = (data.alamat_website || '').trim();
+            hasWebsite = url !== '';
+            starCount = parseInt(data.stars || 0, 10);
+        }
+
         const fillColor = hasWebsite ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
         const strokeColor = hasWebsite ? '#10b981' : '#ef4444';
+        
+        let labelText = name;
+        if (starCount > 0) labelText += ' ' + '★'.repeat(starCount);
+
         return new ol.style.Style({
           fill: new ol.style.Fill({ color: fillColor }),
           stroke: new ol.style.Stroke({ color: strokeColor, width: 1 }),
           text: name ? new ol.style.Text({
-            text: name,
+            text: labelText,
             font: '11px sans-serif',
             fill: new ol.style.Fill({ color: '#111827' }),
             stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
@@ -240,7 +285,7 @@ if (isset($_GET['related'])) {
       const url = data.alamat_website || '';
       const valid = /^https?:\/\//i.test(url);
       const urlHtml = valid
-        ? '<a class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow hover:opacity-90" href="'+esc(url)+'" target="_blank">Buka Website<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h7v7h-2V6.41l-6.29 6.3-1.42-1.42L17.59 5H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5V5z"/></svg></a><div class="text-[11px] text-gray-500 mt-1">'+esc(url)+'</div>'
+        ? '<a class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow hover:opacity-90" href="'+esc(url)+'" target="_blank">Buka Website<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h7v7h-2V6.41l-6.29 6.3-1.42-1.42L17.59 5H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5V5z"/></svg></a>'
         : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Tidak ada website</span>';
       const dbp = (data.db_penduduk||'').toString().trim();
       const dbpUpper = dbp.toUpperCase();
@@ -248,6 +293,8 @@ if (isset($_GET['related'])) {
       if (dbpUpper === 'SUDAH ADA') dbBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">Sudah Ada</span>';
       else if (dbpUpper === 'BELUM ADA') dbBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700">Belum Ada</span>';
       const linkDesa = 'desa.php?q=' + encodeURIComponent(data.nama_desa || name);
+      const stars = parseInt(data.stars||0, 10);
+      const starStr = stars > 0 ? ' <span class="text-amber-500 text-sm">'+'★'.repeat(stars)+'</span>' : '';
       panel.innerHTML =
         '<div class="space-y-3">'+
           '<div class="flex items-start gap-3">'+
@@ -255,7 +302,7 @@ if (isset($_GET['related'])) {
               '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>'+
             '</div>'+
             '<div class="flex-1">'+
-              '<div class="text-base font-semibold text-gray-900">'+esc(data.nama_desa || name)+'</div>'+
+              '<div class="text-base font-semibold text-gray-900">'+esc(data.nama_desa || name)+starStr+'</div>'+
               '<div class="text-xs text-gray-600">'+esc(data.nama_kecamatan || kecHint || '')+'</div>'+
               '<div class="mt-2 flex items-center gap-2">'+dbBadge+'</div>'+
             '</div>'+
@@ -269,9 +316,6 @@ if (isset($_GET['related'])) {
               '<div class="text-sm text-gray-600">Website</div>'+
               '<div>'+urlHtml+'</div>'+
             '</div>'+
-          '</div>'+
-          '<div class="flex items-center gap-2">'+
-            '<a href="'+linkDesa+'" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border bg-white shadow-sm hover:bg-gray-50 text-sm">Lihat di Daftar Desa<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 5v2h6.59L4 18.59 5.41 20 17 8.41V15h2V5z"/></svg></a>'+
           '</div>';
       const rp = document.getElementById('relatedPanel');
       rp.innerHTML =
@@ -328,7 +372,21 @@ if (isset($_GET['related'])) {
         const name = props['Nama_Desa_'] || props['nama'] || props['Name'] || 'Desa';
         const kec = props['Nama_Kec'] || props['kecamatan'] || '';
         const kab = props['Nama_Kab'] || props['kabupaten'] || '';
-        popupEl.innerHTML = '<div class="text-sm font-semibold text-gray-900">'+name+'</div>' +
+        
+        const normDesa = (name||'').toLowerCase().trim().replace(/^desa\s+/,'').replace(/\s+/g,' ');
+        const normKecVal = (kec||'').toLowerCase().trim().replace(/\s+/g,' ');
+        const composite = normKecVal + '|' + normDesa;
+        let data = window.desaData && window.desaData[composite] ? window.desaData[composite] : null;
+        if (!data) {
+             const keys = Object.keys(window.desaData||{});
+             for (let i=0;i<keys.length;i++) {
+               if (keys[i].endsWith('|'+normDesa)) { data = window.desaData[keys[i]]; break; }
+             }
+        }
+        const stars = data ? parseInt(data.stars||0, 10) : 0;
+        const starStr = stars > 0 ? ' <span class="text-amber-500">'+'★'.repeat(stars)+'</span>' : '';
+
+        popupEl.innerHTML = '<div class="text-sm font-semibold text-gray-900">'+name+starStr+'</div>' +
                             '<div class="text-xs text-gray-600">'+[kec,kab].filter(Boolean).join(' · ')+'</div>';
         popupEl.style.display = 'block';
         popup.setPosition(evt.coordinate);

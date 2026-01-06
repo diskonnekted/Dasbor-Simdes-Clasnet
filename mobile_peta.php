@@ -1,7 +1,57 @@
+<?php
+require_once __DIR__ . '/config.php';
+$db = db();
+$desaData = [];
+$newsContent = '';
+if ($nRes = $db->query("SELECT judul, isi FROM berita WHERE published=1")) {
+  while ($row = $nRes->fetch_assoc()) {
+    $newsContent .= ' ' . strip_tags($row['judul'] . ' ' . $row['isi']);
+  }
+}
+$newsContent = mb_strtolower($newsContent);
+
+if ($res = $db->query("SELECT id, nama_kecamatan, nama_desa, alamat_website, jumlah_penduduk, db_penduduk FROM desa")) {
+  while ($r = $res->fetch_assoc()) {
+    $desaRaw = trim($r['nama_desa'] ?? '');
+    $kecRaw = trim($r['nama_kecamatan'] ?? '');
+    $desaNorm = mb_strtolower(preg_replace('/\s+/', ' ', preg_replace('/^\s*desa\s+/i', '', $desaRaw)));
+    $kecNorm = mb_strtolower(preg_replace('/\s+/', ' ', $kecRaw));
+    
+    $stars = 0;
+    $hasWebsite = !empty($r['alamat_website']);
+    $hasDb = isset($r['db_penduduk']) && strtoupper($r['db_penduduk']) === 'SUDAH ADA';
+    $hasNews = false;
+    if ($desaNorm !== '') {
+        if (preg_match('/\b'.preg_quote($desaNorm, '/').'\b/', $newsContent)) {
+            $hasNews = true;
+        }
+    }
+    if ($hasWebsite) {
+        $stars = 1;
+        if ($hasDb) {
+            $stars = 2;
+            if ($hasNews) {
+                $stars = 3;
+            }
+        }
+    }
+    $r['stars'] = $stars;
+
+    $key = $kecNorm . '|' . $desaNorm;
+    if ($desaNorm !== '') { $desaData[$key] = $r; }
+  }
+}
+?>
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script>
+    window.desaData = <?= json_encode($desaData, JSON_UNESCAPED_UNICODE) ?>;
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <title>Peta — SID Mobile</title>
   <link rel="icon" href="clasnet.png" type="image/png">
@@ -26,14 +76,13 @@
   <main class="pt-16">
     <div class="px-4">
       <div class="bg-white rounded-xl shadow overflow-hidden">
-        <div class="flex items-center justify-between px-4 py-3 border-b">
-          <div>
-            <div class="text-xs text-gray-400">Data: GeoJSON dari repo Clasnet</div>
+        <div class="flex flex-col gap-2 px-4 py-3 border-b">
+          <div class="text-xs text-gray-400">Data: GeoJSON lokal</div>
+          <div class="flex flex-wrap gap-3 text-xs font-medium text-gray-600">
+             <div class="flex items-center gap-1"><span class="text-amber-500">★</span> SID</div>
+             <div class="flex items-center gap-1"><span class="text-amber-500">★★</span> +DB</div>
+             <div class="flex items-center gap-1"><span class="text-amber-500">★★★</span> +Berita</div>
           </div>
-          <a href="https://github.com/Clasnet/clasnet-peta-desa" target="_blank" class="inline-flex items-center gap-2 px-3 py-1 rounded-lg border bg-white text-sm">
-            Repo Peta
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h7v7h-2V6.41l-6.29 6.3-1.42-1.42L17.59 5H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5V5z"/></svg>
-          </a>
         </div>
         <div class="p-3">
           <div class="relative w-full h-[60vh] rounded-lg overflow-hidden ring-1 ring-gray-100">
@@ -85,28 +134,38 @@
         const normKec = (kec||'').toLowerCase().trim().replace(/\s+/g,' ');
         const key = normKec + '|' + normDesa;
         let hasWebsite = false;
+        let starCount = 0;
         const dataMap = window.desaData || {};
-        if (dataMap[key]) {
-          const url = (dataMap[key].alamat_website || '').trim();
-          hasWebsite = url !== '';
-        } else {
+        let data = dataMap[key];
+        
+        if (!data) {
           const keys = Object.keys(dataMap);
           for (let i=0;i<keys.length;i++) {
             const k = keys[i];
             if (k.endsWith('|'+normDesa)) {
-              const url = (dataMap[k].alamat_website || '').trim();
-              hasWebsite = url !== '';
+              data = dataMap[k];
               break;
             }
           }
         }
+        
+        if (data) {
+            const url = (data.alamat_website || '').trim();
+            hasWebsite = url !== '';
+            starCount = parseInt(data.stars || 0, 10);
+        }
+
         const fillColor = hasWebsite ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
         const strokeColor = hasWebsite ? '#10b981' : '#ef4444';
+        
+        let labelText = name;
+        if (starCount > 0) labelText += ' ' + '★'.repeat(starCount);
+
         return new ol.style.Style({
           fill: new ol.style.Fill({ color: fillColor }),
           stroke: new ol.style.Stroke({ color: strokeColor, width: 1 }),
           text: name ? new ol.style.Text({
-            text: name,
+            text: labelText,
             font: '10px sans-serif',
             fill: new ol.style.Fill({ color: '#111827' }),
             stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
