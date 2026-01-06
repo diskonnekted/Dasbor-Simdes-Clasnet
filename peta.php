@@ -21,7 +21,8 @@ if ($res = $db->query("SELECT id, nama_kecamatan, nama_desa, alamat_website, jum
     $desaRaw = trim($r['nama_desa'] ?? '');
     $kecRaw = trim($r['nama_kecamatan'] ?? '');
     $desaNorm = mb_strtolower(preg_replace('/\s+/', ' ', preg_replace('/^\s*desa\s+/i', '', $desaRaw)));
-    $kecNorm = mb_strtolower(preg_replace('/\s+/', ' ', $kecRaw));
+    // Normalisasi kecamatan: Hapus "Kecamatan" atau "Kec." agar key konsisten dengan GeoJSON
+    $kecNorm = mb_strtolower(trim(preg_replace('/^(kecamatan|kec\.?)\s+/i', '', $kecRaw)));
     
     // Hitung Bintang
     $stars = 0;
@@ -291,9 +292,10 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
       source: vectorSource,
       style: function(feature) {
         const name = feature.get('Nama_Desa_') || feature.get('nama') || feature.get('Name') || '';
-        const kec = feature.get('Nama_Kec') || feature.get('kecamatan') || '';
+        const kec = feature.get('Nama_Kec') || feature.get('kecamatan') || feature.get('Kecamatan') || '';
         const normDesa = (name||'').toLowerCase().trim().replace(/^desa\s+/,'').replace(/\s+/g,' ');
-        const normKec = (kec||'').toLowerCase().trim().replace(/\s+/g,' ');
+        // Normalisasi kecamatan: Hapus "Kecamatan" atau "Kec." agar key konsisten dengan PHP
+        const normKec = (kec||'').toLowerCase().trim().replace(/^kec(\.|amatan)?\s*/, '').replace(/\s+/g,' ');
         const key = normKec + '|' + normDesa;
         let hasWebsite = false;
         let starCount = 0;
