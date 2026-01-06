@@ -217,6 +217,22 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
           </div>
         </div>
         <div class="p-3">
+          <!-- Legenda Warna -->
+          <div class="mb-3 px-1 flex flex-wrap items-center gap-4 text-xs font-medium text-gray-600">
+            <div class="flex items-center gap-2">
+              <span class="w-4 h-4 rounded shadow-sm border" style="background-color: rgba(244, 63, 94, 0.15); border-color: #ef4444;"></span>
+              <span>Belum memiliki SID</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-4 h-4 rounded shadow-sm border" style="background-color: rgba(16, 185, 129, 0.15); border-color: #10b981;"></span>
+              <span>Sudah memiliki SID</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-4 h-4 rounded shadow-sm border" style="background-color: rgba(56, 189, 248, 0.4); border-color: #0284c7;"></span>
+              <span>SID pendampingan Clasnet</span>
+            </div>
+          </div>
+
           <div class="relative w-full map-wrap rounded-lg overflow-hidden ring-1 ring-gray-100">
             <div id="map" class="absolute inset-0 w-full h-full"></div>
             <div id="popup" class="ol-popup" style="display:none;"></div>
