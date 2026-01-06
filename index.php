@@ -74,6 +74,11 @@ $dbPendudukTotal = $dbPendudukSudah + $dbPendudukBelum;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Statistik SID</title>
   <link rel="icon" href="clasnet.png" type="image/png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="apple-touch-icon" href="/clasnet.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>

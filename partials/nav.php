@@ -10,6 +10,7 @@ $items = [
   ['href' => 'inovasi.php',    'label' => 'Inovasi',     'slug' => 'inovasi'],
   ['href' => 'statistik2.php', 'label' => 'Statistik',   'slug' => 'statistik2'],
   ['href' => 'kontak.php',     'label' => 'Kontak',      'slug' => 'kontak'],
+  ['href' => 'mobile.php',     'label' => 'Mobile',      'slug' => 'mobile'],
 ];
 
 echo '<nav class="flex gap-4 text-sm">';
