@@ -386,7 +386,8 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
       return (s||'').toLowerCase().trim().replace(/^desa\s+/,'').replace(/\s+/g,' ');
     }
     function normKec(s) {
-      return (s||'').toLowerCase().trim().replace(/\s+/g,' ');
+      // Normalisasi kecamatan: Hapus "Kecamatan" atau "Kec." agar key konsisten
+      return (s||'').toLowerCase().trim().replace(/^kec(\.|amatan)?\s*/, '').replace(/\s+/g,' ');
     }
     function fmt(n) {
       const x = parseInt(n,10); if (isNaN(x)) return '';
@@ -525,7 +526,8 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
         const kab = props['Nama_Kab'] || props['Kabupaten'] || props['kabupaten'] || '';
         
         const normDesa = (name||'').toLowerCase().trim().replace(/^desa\s+/,'').replace(/\s+/g,' ');
-        const normKecVal = (kec||'').toLowerCase().trim().replace(/\s+/g,' ');
+        // Gunakan fungsi helper normKec agar konsisten
+        const normKecVal = normKec(kec);
         const composite = normKecVal + '|' + normDesa;
         let data = window.desaData && window.desaData[composite] ? window.desaData[composite] : null;
         if (!data) {
