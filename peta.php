@@ -210,15 +210,15 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div class="lg:col-span-2 bg-white rounded-xl shadow-lg ring-1 ring-gray-100">
         <div class="p-3">
-          <!-- Legenda Bintang -->
-          <div class="mb-2 px-1 flex flex-wrap gap-4 text-xs font-medium text-gray-600">
+          <!-- Legenda Bintang (Desktop) -->
+          <div class="mb-2 px-1 hidden lg:flex flex-wrap gap-4 text-xs font-medium text-gray-600">
              <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★</span> Memiliki SID</div>
              <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★★</span> + Database</div>
              <div class="flex items-center gap-1"><span class="text-amber-500 text-base">★★★</span> + Update Berita</div>
           </div>
           
-          <!-- Legenda Warna -->
-          <div class="mb-3 px-1 flex flex-wrap items-center gap-4 text-xs font-medium text-gray-600">
+          <!-- Legenda Warna (Desktop) -->
+          <div class="mb-3 px-1 hidden lg:flex flex-wrap items-center gap-4 text-xs font-medium text-gray-600">
             <div class="flex items-center gap-2">
               <span class="w-4 h-4 rounded shadow-sm border" style="background-color: rgba(244, 63, 94, 0.15); border-color: #ef4444;"></span>
               <span>Belum memiliki SID</span>
@@ -234,6 +234,32 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
           </div>
 
           <div class="relative w-full map-wrap rounded-lg overflow-hidden ring-1 ring-gray-100">
+            <!-- Mobile Legend Overlay -->
+            <div class="lg:hidden absolute top-3 right-3 z-30 flex flex-col items-end">
+              <button onclick="document.getElementById('mobileLegendOverlay').classList.toggle('hidden')" class="bg-white/90 backdrop-blur shadow-md border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-gray-50 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="currentColor"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                Legenda
+              </button>
+              <div id="mobileLegendOverlay" class="hidden mt-2 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 p-4 w-64 text-xs space-y-4">
+                 <div>
+                   <div class="font-semibold text-gray-900 mb-2">Status Website</div>
+                   <div class="space-y-2">
+                      <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500"></span> Memiliki SID</div>
+                      <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-sky-500/40 border border-sky-600"></span> SID Clasnet</div>
+                      <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-rose-500/20 border border-rose-500"></span> Belum Ada</div>
+                   </div>
+                 </div>
+                 <div>
+                   <div class="font-semibold text-gray-900 mb-2">Kelengkapan Data</div>
+                   <div class="space-y-1">
+                      <div class="flex items-center gap-1"><span class="text-amber-500 text-sm">★</span> Website Aktif</div>
+                      <div class="flex items-center gap-1"><span class="text-amber-500 text-sm">★★</span> + Data Penduduk</div>
+                      <div class="flex items-center gap-1"><span class="text-amber-500 text-sm">★★★</span> + Update Berita</div>
+                   </div>
+                 </div>
+              </div>
+            </div>
+
             <div id="map" class="absolute inset-0 w-full h-full"></div>
             <div id="popup" class="ol-popup" style="display:none;"></div>
           </div>
@@ -271,6 +297,35 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
           </div>
         </div>
       </div>
+    </div>
+  </div>
+  <!-- Mobile Bottom Sheet Backdrop -->
+  <div id="mobileSheetBackdrop" onclick="closeMobileSheet()" class="fixed inset-0 bg-black/20 z-[60] hidden lg:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
+  <!-- Mobile Bottom Sheet -->
+  <div id="mobileSheet" class="fixed inset-x-0 bottom-0 z-[70] bg-white rounded-t-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] transform transition-transform duration-300 translate-y-full lg:hidden h-[75vh] flex flex-col">
+    <div class="p-4 border-b flex items-center justify-between bg-gray-50 rounded-t-2xl shrink-0" onclick="toggleMobileSheet()">
+      <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto absolute left-0 right-0 top-3"></div>
+      <div class="text-sm font-bold text-gray-800 mt-2">Detail Informasi Desa</div>
+      <button onclick="closeMobileSheet()" class="p-2 bg-gray-200 rounded-full text-gray-600 hover:bg-gray-300 mt-2 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-5 pb-24 bg-white">
+       <div id="mobileDesaPanel">
+          <!-- Default State -->
+          <div class="rounded-xl border border-dashed border-gray-300 p-4 bg-gradient-to-br from-gray-50 to-white text-center">
+            <div class="text-sm text-gray-500">Pilih desa pada peta untuk melihat detail.</div>
+          </div>
+       </div>
+       <div class="mt-6 pt-4 border-t border-dashed border-gray-200">
+          <div class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/><path d="M14 17H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+             Berita Terkait
+          </div>
+          <div id="mobileRelatedPanel" class="space-y-3">
+             <div class="text-xs text-gray-500 italic">Belum ada desa dipilih.</div>
+          </div>
+       </div>
     </div>
   </div>
   <?php include __DIR__ . '/partials/footer.php'; ?>
@@ -425,6 +480,14 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
             '</div>'+
           '</div>';
         document.getElementById('relatedPanel').innerHTML = '';
+        
+        // Update Mobile
+        const mPanel = document.getElementById('mobileDesaPanel');
+        const mRel = document.getElementById('mobileRelatedPanel');
+        if (mPanel) mPanel.innerHTML = panel.innerHTML;
+        if (mRel) mRel.innerHTML = '<div class="text-xs text-gray-500 italic">Data detail belum tersedia.</div>';
+        if (window.innerWidth < 1024) openMobileSheet();
+
         return;
       }
       const url = data.alamat_website || '';
@@ -467,6 +530,11 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
               '<div class="text-sm font-medium text-gray-800">'+esc(dev)+'</div>'+
             '</div>'+
           '</div>';
+      
+      // Update Mobile Desa Panel
+      const mPanel = document.getElementById('mobileDesaPanel');
+      if (mPanel) mPanel.innerHTML = panel.innerHTML;
+
       const rp = document.getElementById('relatedPanel');
       rp.innerHTML =
         '<div class="space-y-2">'+
@@ -491,13 +559,24 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
             '</div>'+
           '</div>'+
         '</div>';
+      
+      // Update Mobile Related Skeleton & Open Sheet
+      const mRel = document.getElementById('mobileRelatedPanel');
+      if (mRel) mRel.innerHTML = rp.innerHTML;
+      if (window.innerWidth < 1024) openMobileSheet();
+
       const safeName = data.nama_desa || name || '';
       const safeKec = data.nama_kecamatan || kecHint || '';
       fetch('peta.php?related=1&desa='+encodeURIComponent(safeName)+'&kec='+encodeURIComponent(safeKec)+'&_t='+Date.now())
         .then(r => r.json())
         .then(j => {
           const items = j && j.items ? j.items : [];
-          if (!items.length) { rp.innerHTML = '<div class="rounded-xl border border-gray-200 bg-white p-4 text-gray-600">Tidak ada berita terkait.</div>'; return; }
+          if (!items.length) { 
+             const emptyMsg = '<div class="rounded-xl border border-gray-200 bg-white p-4 text-gray-600">Tidak ada berita terkait.</div>';
+             rp.innerHTML = emptyMsg;
+             if (mRel) mRel.innerHTML = emptyMsg;
+             return; 
+          }
           let html = '';
           for (let i=0;i<items.length;i++) {
             const it = items[i];
@@ -514,8 +593,13 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
                     '</a>';
           }
           rp.innerHTML = html;
+          if (mRel) mRel.innerHTML = html;
         })
-        .catch(() => { rp.innerHTML = '<div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700">Gagal memuat berita terkait.</div>'; });
+        .catch(() => { 
+            const errMsg = '<div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700">Gagal memuat berita terkait.</div>';
+            rp.innerHTML = errMsg; 
+            if (mRel) mRel.innerHTML = errMsg;
+        });
     }
     map.on('singleclick', function(evt) {
       const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
@@ -548,6 +632,31 @@ if (isset($_GET['ajax_berita']) || isset($_GET['related'])) {
         popupEl.style.display = 'none';
       }
     });
+
+    // Mobile Bottom Sheet Logic
+    function openMobileSheet() {
+      const sheet = document.getElementById('mobileSheet');
+      const backdrop = document.getElementById('mobileSheetBackdrop');
+      if(sheet) sheet.classList.remove('translate-y-full');
+      if(backdrop) {
+         backdrop.classList.remove('hidden');
+         setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+      }
+    }
+    function closeMobileSheet() {
+      const sheet = document.getElementById('mobileSheet');
+      const backdrop = document.getElementById('mobileSheetBackdrop');
+      if(sheet) sheet.classList.add('translate-y-full');
+      if(backdrop) {
+         backdrop.classList.add('opacity-0');
+         setTimeout(() => backdrop.classList.add('hidden'), 300);
+      }
+    }
+    function toggleMobileSheet() {
+      const sheet = document.getElementById('mobileSheet');
+      if(sheet && sheet.classList.contains('translate-y-full')) openMobileSheet();
+      else closeMobileSheet();
+    }
   </script>
 </body>
 </html>
