@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #fafbfe;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'Plus Jakarta Sans', var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono);
+  
+  --radius-3xl: 8px;
+  --radius-2xl: 8px;
+  --radius-xl: 6px;
+  --radius-lg: 6px;
+  --radius-md: 4px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.premium-gradient {
+  background-color: #4f46e5; /* Flat Indigo */
+}
+
+.premium-gradient-hover:hover {
+  background-color: #3730a3; /* Flat Dark Indigo */
+}
+
+.premium-shadow {
+  box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.12);
+}
+
+.premium-shadow-hover:hover {
+  box-shadow: 0 20px 40px -15px rgba(79, 70, 229, 0.22);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Micro-animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.animate-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
